@@ -22,4 +22,24 @@ public class UserMealWithExceed {
     public String toString() {
         return this.dateTime + " " + this.description + " " + this.calories + " " + this.exceed;
     }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getCalories() {
+        return calories;
+    }
+
+    public boolean isExceed() {
+        return exceed;
+    }
+
+    public void setExceed(boolean exceed) {
+        this.exceed = exceed;
+    }
 }

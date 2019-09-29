@@ -23,7 +23,7 @@ public class UserMealsUtil {
                 new UserMeal(LocalDateTime.of(2015, Month.MAY, 29, 13, 0), "Обед", 500),
                 new UserMeal(LocalDateTime.of(2015, Month.MAY, 29, 20, 0), "Ужин", 510)
         );
-        List<UserMealWithExceed> filteredWithExceeded = getFilteredWithExceeded(mealList, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000);
+        List<UserMealWithExceed> filteredWithExceeded = getFilteredWithExceeded2(mealList, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000);
         for (UserMealWithExceed meal : filteredWithExceeded) {
             System.out.println(meal.toString());
 
@@ -69,6 +69,54 @@ public class UserMealsUtil {
             }
         }
         //map.put(date, tmpList);
+        return result;
+    }
+
+    public static List<UserMealWithExceed> getFilteredWithExceeded2(List<UserMeal> mealList, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
+
+        List<UserMealWithExceed> result = new ArrayList<>();
+        Map<LocalDate, Integer> thresholdMap = new HashMap<>();
+        Map<LocalDate, List<UserMealWithExceed>> finalMap = new HashMap<>();
+
+        //add check for a null array
+        LocalDate date = mealList.get(0).getDateTime().toLocalDate();
+
+        thresholdMap.put(date, 0);
+        finalMap.put(date, new ArrayList<>());
+
+        for (UserMeal meal : mealList) {
+
+            date = meal.getDateTime().toLocalDate();
+
+            if (!thresholdMap.containsKey(date)) {
+                thresholdMap.put(date, meal.getCalories());
+                if (TimeUtil.isBetween(meal.getDateTime().toLocalTime(), startTime, endTime)) {
+                    List<UserMealWithExceed> tmpList = new ArrayList<>();
+                    tmpList.add(new UserMealWithExceed(meal.getDateTime(), meal.getDescription(), meal.getCalories(), false));
+                    finalMap.put(date, tmpList);
+                }
+            } else {
+                Integer caloriesCount = thresholdMap.get(date);
+                thresholdMap.put(date, caloriesCount + meal.getCalories());
+                if (TimeUtil.isBetween(meal.getDateTime().toLocalTime(), startTime, endTime)) {
+                    List<UserMealWithExceed> tmpList = finalMap.get(date);
+                    tmpList.add(new UserMealWithExceed(meal.getDateTime(), meal.getDescription(), meal.getCalories(), false));
+                }
+            }
+        }
+        Iterator it = finalMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            date = (LocalDate) pair.getKey();
+            List<UserMealWithExceed> tmpList = (List<UserMealWithExceed>) pair.getValue();
+            Integer finalCaloriesCount = thresholdMap.get(date);
+            for (UserMealWithExceed tmpMeal : tmpList) {
+                if (finalCaloriesCount > caloriesPerDay) {
+                    tmpMeal.setExceed(true);
+                }
+            }
+            result.addAll(tmpList);
+        }
         return result;
     }
 }
